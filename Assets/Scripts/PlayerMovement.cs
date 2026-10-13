@@ -7,11 +7,14 @@ public class PlayerMovement : MonoBehaviour
 {   
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float jumpForce = 5f;
+    [SerializeField] private float doubleJumpForce = 3f;
     
     private Rigidbody rb;
     private Vector3 moveDirection;
+    private int jumpCount = 0;
+    private int maxJumpCount = 2;
 
-    private bool isGrounded = true;
+    //private bool isGrounded = true;
 
     void Awake()
     {
@@ -45,20 +48,31 @@ public class PlayerMovement : MonoBehaviour
     }
     private void JumpInput()
     {
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        if (Input.GetKeyDown(KeyCode.Space) && jumpCount < maxJumpCount)
         {
             Jump();
         }
     }
 
     void Jump()
-    {
-        isGrounded = false;
-        rb.AddForce(
-            Vector3.up * jumpForce,
-            ForceMode.Impulse
-        );
-        Debug.Log("점프성공!");
+    {   
+        // 기존 y축 속도를 초기화
+        Vector3 velocity = rb.linearVelocity;
+        velocity.y = 0f;
+        rb.linearVelocity = velocity;
+
+        if (jumpCount == 0)
+        {   
+            Debug.Log("1단 점프!");
+            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+        }
+        else
+        {   
+            Debug.Log("2단 점프!");
+            rb.AddForce(Vector3.up * doubleJumpForce, ForceMode.Impulse);
+        }     
+        jumpCount++;
+
     }
 
     void OnCollisionEnter(Collision collision) 
@@ -69,7 +83,7 @@ public class PlayerMovement : MonoBehaviour
             {
                 if (Vector3.Dot(contact.normal, Vector3.up) > 0.5f)
                 {
-                    isGrounded = true;
+                    jumpCount = 0;
                     break;
                 }
             }
